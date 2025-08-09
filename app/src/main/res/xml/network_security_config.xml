@@ -1,0 +1,4 @@
+<!-- Define your network security config here -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

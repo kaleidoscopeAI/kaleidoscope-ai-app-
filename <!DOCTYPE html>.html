@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Analysis System</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.22.9/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@12.0.0/lib/browser/math.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/framer-motion@11.2.6/dist/framer-motion.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@radix-ui/react-tabs@1.0.4/dist/index.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@radix-ui/react-alert@1.0.4/dist/index.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@radix-ui/react-button@1.0.4/dist/index.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@radix-ui/react-progress@1.0.3/dist/index.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@radix-ui/react-card@1.0.4/dist/index.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.441.0/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, Suspense } = React;
+    const { LineChart, Line, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = window.Recharts;
+    const { Tabs, TabsList, TabsTrigger, TabsContent } = window.RadixUIReactTabs;
+    const { Alert, AlertDescription, AlertTitle } = window.RadixUIReactAlert;
+    const { Button } = window.RadixUIReactButton;
+    const { Progress } = window.RadixUIReactProgress;
+    const { Card, CardHeader, CardTitle, CardContent } = window.RadixUIReactCard;
+    const { Activity, Upload, Brain, Cpu } = window.lucide;
+    const { motion } = window.FramerMotion;
+
+    // Mock components for placeholders
+    const NetworkGraph = ({ nodes, onNodeSelect }) => (
+      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <p className="text-gray-600">Network Graph Placeholder (Nodes: {nodes || 0})</p>
+      </div>
+    );
+
+    const NodeMatrix = ({ selectedNode }) => (
+      <div className="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <p className="text-gray-600">Node Matrix Placeholder (Selected: {selectedNode || 'None'})</p>
+      </div>
+    );
+
+    const UnifiedSystem = () => {
+      const [systemState, setSystemState] = useState({
+        isProcessing: false,
+        activeDemo: null,
+        error: null,
+        progress: 0,
+        stage: null,
+        memoryUsage: 0,
+        cpuUsage: 0
+      });
+
+      const [processedData, setProcessedData] = useState({
+        rawData: [],
+        molecularResults: null,
+        analysisHistory: []
+      });
+
+      const [systemMetrics, setSystemMetrics] = useState([]);
+
+      // System monitoring effect
+      useEffect(() => {
+        let interval;
+        try {
+          interval = setInterval(() => {
+            setSystemMetrics(prev => {
+              const newMetric = {
+                timestamp: new Date().toISOString(),
+                cpu: Math.random() * 100,
+                memory: Math.random() * 100,
+                throughput: Math.random() * 1000
+              };
+              return [...prev.slice(-30), newMetric];
+            });
+          }, 1000);
+        } catch (error) {
+          console.error('Failed to start system monitoring:', error);
+          setSystemState(prev => ({ ...prev, error: 'Monitoring initialization failed' }));
+        }
+        return () => {
+          if (interval) clearInterval(interval);
+        };
+      }, []);
+
+      // Simulate processing with error handling
+      const simulateProcessing = async (ms) => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            if (Math.random() < 0.05) { // 5% chance of simulated error
+              reject(new Error('Simulated processing failure'));
+            } else {
+              resolve();
+            }
+          }, ms);
+        });
+      };
+
+      // Handle demo button click
+      const handleDemo = async () => {
+        try {
+          setSystemState(prev => ({
+            ...prev,
+            isProcessing: true,
+            stage: 'uploading',
+            progress: 0,
+            error: null
+          }));
+
+          await simulateProcessing(1000);
+
+          setSystemState(prev => ({ ...prev, stage: 'processing', progress: 30 }));
+          const mockData = [
+            { mass: 100, bindingEnergy: 50, surfaceArea: 200 },
+            { mass: 120, bindingEnergy: 55, surfaceArea: 210 },
+            { mass: 110, bindingEnergy: 60, surfaceArea: 205 }
+          ];
+          if (!Array.isArray(mockData)) throw new Error('Invalid mock data format');
+
+          await simulateProcessing(1000);
+
+          setSystemState(prev => ({ ...prev, stage: 'analyzing', progress: 60 }));
+          const results = {
+            analysis: {
+              mass: { mean: window.math.mean(mockData.map(d => d.mass)) },
+              bindingEnergy: { mean: window.math.mean(mockData.map(d => d.bindingEnergy)) },
+              surfaceArea: { mean: window.math.mean(mockData.map(d => d.surfaceArea)) }
+            },
+            grouped: window._.groupBy(mockData, () => 'demo')
+          };
+          if (!results.analysis) throw new Error('Analysis computation failed');
+
+          await simulateProcessing(800);
+
+          setSystemState(prev => ({ ...prev, stage: 'visualizing', progress: 90 }));
+          const visualizations = {
+            correlations: [
+              { pair: 'mass vs bindingEnergy', correlation: 0.85, x: 100, y: 50 },
+              { pair: 'mass vs surfaceArea', correlation: 0.9, x: 100, y: 200 }
+            ]
+          };
+          if (!visualizations.correlations) throw new Error('Visualization generation failed');
+
+          await simulateProcessing(500);
+
+          setProcessedData(prev => ({
+            ...prev,
+            molecularResults: results,
+            analysisHistory: [
+              ...prev.analysisHistory,
+              { timestamp: new Date().toISOString(), type: 'molecular', summary: results.analysis }
+            ]
+          }));
+
+          setSystemState(prev => ({
+            ...prev,
+            isProcessing: false,
+            stage: 'complete',
+            progress: 100
+          }));
+        } catch (error) {
+          console.error('Demo processing failed:', error);
+          setSystemState(prev => ({
+            ...prev,
+            isProcessing: false,
+            stage: 'error',
+            error: error.message || 'An unexpected error occurred during demo'
+          }));
+        }
+      };
+
+      // System Status Component
+      const SystemStatus = ({ state, metrics }) => (
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          className="flex items-center space-x-2 bg-blue-100/50 backdrop-blur-sm px-4 py-2 rounded-full"
+        >
+          <Activity className={`w-5 h-5 ${state.isProcessing ? 'text-green-500 animate-pulse' : 'text-blue-500'}`} />
+          <span className="text-sm font-medium text-blue-700">
+            {state.stage ? `Stage: ${state.stage}` : 'Ready'}
+          </span>
+          {metrics && (
+            <>
+              <span>|</span>
+              <span className="text-sm">CPU: {metrics.cpu?.toFixed(1) || 0}%</span>
+              <span className="text-sm">Memory: {metrics.memory?.toFixed(1) || 0}%</span>
+            </>
+          )}
+        </motion.div>
+      );
+
+      // Molecular Analysis Component
+      const MolecularAnalysis = ({ data }) => (
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Brain className="w-5 h-5 text-blue-500" />
+              <span>Molecular Analysis Results</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {data ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ScatterChart>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" dataKey="x" name="Property 1" />
+                      <YAxis type="number" dataKey="y" name="Property 2" />
+                      <Tooltip cursor={{ strokeDasharray: '3 3' }} />
+                      <Scatter name="Correlations" data={[{ x: 100, y: 50 }, { x: 120, y: 55 }]} fill="#3b82f6" />
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="space-y-2">
+                  {Object.entries(data.analysis || {}).map(([key, value]) => (
+                    <div key={key} className="bg-gray-100 p-2 rounded">
+                      <h3 className="font-medium capitalize">{key}</h3>
+                      <p className="text-sm">Mean: {value.mean?.toFixed(2) || 'N/A'}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-600">No data available. Try the demo to see results.</p>
+            )}
+          </CardContent>
+        </Card>
+      );
+
+      // System Monitor Component
+      const SystemMonitor = ({ metrics }) => (
+        <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Cpu className="w-5 h-5 text-blue-500" />
+              <span>System Performance</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={metrics.slice(-20)}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="timestamp" tickFormatter={(tick) => new Date(tick).toLocaleTimeString()} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="cpu" stroke="#3b82f6" name="CPU Usage" />
+                  <Line type="monotone" dataKey="memory" stroke="#10b981" name="Memory" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      );
+
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-blue-50 via-gray-100 to-blue-50 text-gray-800 p-4 overflow-x-hidden">
+          <div className="max-w-7xl mx-auto space-y-8">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-green-500">
+                Advanced Analysis System
+              </h1>
+              <SystemStatus state={systemState} metrics={systemMetrics.slice(-1)[0]} />
+            </div>
+
+            <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                  <Button
+                    className="bg-gradient-to-r from-blue-500 to-green-600 hover:from-blue-600 hover:to-green-700 text-white"
+                    onClick={handleDemo}
+                    disabled={systemState.isProcessing}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Try Demo
+                  </Button>
+                  <Button
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800"
+                    onClick={() => {
+                      try {
+                        window.location.href = 'https://example.com/learn-more';
+                      } catch (error) {
+                        console.error('Navigation failed:', error);
+                        setSystemState(prev => ({ ...prev, error: 'Failed to navigate to Learn More' }));
+                      }
+                    }}
+                  >
+                    Learn More
+                  </Button>
+                </div>
+                {systemState.isProcessing && (
+                  <div className="mt-4">
+                    <Progress value={systemState.progress} className="w-full" />
+                    <p className="text-center mt-2 text-sm text-gray-600">
+                      {systemState.stage} - {systemState.progress.toFixed(1)}%
+                    </p>
+                  </div>
+                )}
+                {systemState.error && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{systemState.error}</AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+
+            <Tabs defaultValue="molecular" className="space-y-4">
+              <TabsList className="bg-gray-200/50 grid grid-cols-3">
+                <TabsTrigger value="molecular" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                  Molecular
+                </TabsTrigger>
+                <TabsTrigger value="system" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                  System
+                </TabsTrigger>
+                <TabsTrigger value="history" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                  History
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="molecular">
+                <Suspense fallback={<div>Loading...</div>}>
+                  <MolecularAnalysis data={processedData.molecularResults} />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="system">
+                <Suspense fallback={<div>Loading...</div>}>
+                  <SystemMonitor metrics={systemMetrics} />
+                </Suspense>
+              </TabsContent>
+
+              <TabsContent value="history">
+                <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
+                  <CardHeader>
+                    <CardTitle>Analysis History</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {processedData.analysisHistory.length > 0 ? (
+                        processedData.analysisHistory.map((analysis, index) => (
+                          <div key={index} className="flex justify-between items-center p-2 bg-gray-100 rounded">
+                            <span className="capitalize">{analysis.type}</span>
+                            <span className="text-sm text-gray-600">
+                              {new Date(analysis.timestamp).toLocaleString()}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-600">No analysis history yet. Try the demo!</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      );
+    };
+
+    try {
+      ReactDOM.render(<UnifiedSystem />, document.getElementById('root'));
+    } catch (error) {
+      console.error('Failed to render React component:', error);
+      document.getElementById('root').innerHTML = '<p class="text-red-500 text-center">Failed to load application. Please refresh the page.</p>';
+    }
+  </script>
+</body>
+</html>
